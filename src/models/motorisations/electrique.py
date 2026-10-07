@@ -1,40 +1,39 @@
 from src.core.interfaces.motorisation import Motorisation
-from src.core.exceptions import ValidationError
+from src.utils.validators import valider_positif
 
 
 class Electrique(Motorisation):
-    def __init__(self, capacite_kwh: float, consommation_kwh_100km: float, **kwargs):
-        super().__init__(**kwargs)
-        self.capacite_kwh = capacite_kwh
-        self.consommation_kwh_100km = consommation_kwh_100km
 
-#CAPACITE
-    @property
-    def capacite_kwh(self) -> float:
-        return self._capacite_kwh
+    def __init__(
+        self,
+        capacite_kwh: float,
+        consommation_kwh_100km: float
+    ):
+        self.capacite_kwh = valider_positif(
+            capacite_kwh,
+            "La capacité de batterie"
+        )
 
-    @capacite_kwh.setter
-    def capacite_kwh(self, valeur: float):
-        if valeur <= 0:
-            raise ValidationError("La capacité de la batterie doit être positive")
-        self._capacite_kwh = valeur
-#CONSOMMATION
-    @property
-    def consommation_kwh_100km(self) -> float:
-        return self._consommation_kwh_100km
-
-    @consommation_kwh_100km.setter
-    def consommation_kwh_100km(self, valeur: float):
-        if valeur <= 0:
-            raise ValidationError("La consommation doit être positive")
-        self._consommation_kwh_100km = valeur
+        self.consommation_kwh_100km = valider_positif(
+            consommation_kwh_100km,
+            "La consommation électrique"
+        )
 
     @property
     def type(self) -> str:
         return "electrique"
 
-    def autonomie_electrique(self) -> float:
-        return self.capacite_kwh / self.consommation_kwh_100km * 100
-
     def autonomie(self) -> float:
-        return self.autonomie_electrique()
+        return (
+            self.capacite_kwh
+            / self.consommation_kwh_100km
+            * 100
+        )
+
+    def __str__(self) -> str:
+        return (
+            f"Électrique - "
+            f"Batterie : {self.capacite_kwh} kWh - "
+            f"Consommation : "
+            f"{self.consommation_kwh_100km} kWh/100km"
+        )

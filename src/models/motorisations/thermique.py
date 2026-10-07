@@ -1,42 +1,39 @@
+from src.core.exceptions import ValidationError
 from src.core.interfaces.motorisation import Motorisation
+from src.utils.validators import valider_positif
 
 
 class Thermique(Motorisation):
-    def __init__(self, reservoir_l: float, consommation_l_100km: float, **kwargs):
-        super().__init__(**kwargs)
-        self.reservoir_l = reservoir_l
-        self.consommation_l_100km = consommation_l_100km
 
-#CAPACITE
+    def __init__(
+        self,
+        reservoir_l: float,
+        consommation_l_100km: float
+    ):
+        self.reservoir_l = valider_positif(
+            reservoir_l,
+            "Le réservoir"
+        )
 
-    @property
-    def reservoir_l(self) -> float:
-        return self._reservoir_l
-
-    @reservoir_l.setter
-    def reservoir_l(self, valeur: float):
-        if valeur <= 0:
-            raise ValidationError("Le réservoir doit être positif")
-        self._reservoir_l = valeur
-
-#CONSOMMATION
-
-    @property
-    def consommation_l_100km(self) -> float:
-        return self._consommation_l_100km
-
-    @consommation_l_100km.setter
-    def consommation_l_100km(self, valeur: float):
-        if valeur <= 0:
-            raise ValidationError("La consommation doit être positive")
-        self._consommation_l_100km = valeur
+        self.consommation_l_100km = valider_positif(
+            consommation_l_100km,
+            "La consommation thermique"
+        )
 
     @property
     def type(self) -> str:
         return "thermique"
 
-    def autonomie_thermique(self) -> float:
-        return self.reservoir_l / self.consommation_l_100km * 100
-
     def autonomie(self) -> float:
-        return self.autonomie_thermique()
+        return (
+            self.reservoir_l
+            / self.consommation_l_100km
+            * 100
+        )
+
+    def __str__(self) -> str:
+        return (
+            f"Thermique - "
+            f"Réservoir : {self.reservoir_l} L - "
+            f"Consommation : {self.consommation_l_100km} L/100km"
+        )
