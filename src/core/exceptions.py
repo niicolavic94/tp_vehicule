@@ -1,8 +1,14 @@
+
+"""Définit les exceptions personnalisées de l'application."""
+
+
 class ValidationError(Exception):
-    """Exception levée lorsqu'une donnée est invalide."""
+    """Signale qu'une donnée fournie est invalide."""
+
     pass
 
 
 class RepositoryError(Exception):
-    """Exception liée au repository."""
+    """Signale une erreur liée au dépôt de données."""
+
     pass

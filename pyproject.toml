@@ -8,7 +8,12 @@ authors = [
 readme = "README.md"
 requires-python = "^3.14"
 dependencies = [
-    "mysql-connector-python (>=26.7.0,<27.0.0)"
+    "mysql-connector-python (>=26.7.0,<27.0.0)",
+    "pydocstyle (>=6.3.0,<7.0.0)",
+    "sphinx (>=9.1.0,<10.0.0)",
+    "mkdocs (>=1.6.1,<2.0.0)",
+    "mkdocs-material (>=9.7.7,<10.0.0)",
+    "mkdocstrings (>=1.0.7,<2.0.0)"
 ]
 
 [tool.poetry]

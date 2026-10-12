@@ -1,7 +1,11 @@
+
+"""Définit l'interface des motorisations de véhicules."""
+
 from abc import ABC, abstractmethod
 
 
 class Motorisation(ABC):
+    """Interface abstraite d'une motorisation de véhicule."""
 
     @property
     @abstractmethod
