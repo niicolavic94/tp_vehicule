@@ -2,11 +2,13 @@
 import uvicorn
 from fastapi import FastAPI
 
-from parc_vehicule.routers.cars import router
+from parc_vehicule.routers.cars import router as cars_router
+from parc_vehicule.routers.motors import router as motors_router
 
 app = FastAPI()
 
-app.include_router(router)
+app.include_router(cars_router)
+app.include_router(motors_router)
 
 
 @app.get("/")

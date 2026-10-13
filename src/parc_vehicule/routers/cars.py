@@ -43,7 +43,6 @@ class MoteurHybride(BaseModel):
     consommation_kwh_100km: float
 
 
-# Le champ "type" sert à choisir le bon schéma
 MoteurCreate = Annotated[
     MoteurElectrique | MoteurThermique | MoteurHybride,
     Field(discriminator="type"),
@@ -53,8 +52,6 @@ MoteurCreate = Annotated[
 # ---------- Schémas voiture ----------
 
 class VoitureCreate(BaseModel):
-    """Corps du POST : pas d'id, il est attribué par le repository."""
-
     marque: str
     modele: str
     annee: int
@@ -76,10 +73,17 @@ class VoitureRead(BaseModel):
     autonomie_km: float
 
 
+# AJOUT IA : schéma de lecture d'une motorisation (nouveau)
+class MoteurRead(BaseModel):
+    id: int
+    type: str
+    power: float | None
+    autonomie_km: float
+
+
 # ---------- Conversions ----------
 
 def creer_moteur(data) -> Motorisation:
-    """Convertit le schéma reçu en objet Motorisation."""
     if isinstance(data, MoteurElectrique):
         return Electrique(data.capacite_kwh, data.consommation_kwh_100km)
     if isinstance(data, MoteurThermique):
@@ -108,19 +112,21 @@ def vers_read(voiture: Voiture) -> VoitureRead:
     )
 
 
+# AJOUT IA : fonction de conversion moteur vers MoteurRead (nouveau)
+def moteur_vers_read(moteur: Motorisation) -> MoteurRead:
+    return MoteurRead(
+        id=moteur.id,
+        type=moteur.type,
+        power=getattr(moteur, "power", None),
+        autonomie_km=moteur.autonomie(),
+    )
+
+
 # ---------- Routes ----------
 
 @router.get("/", response_model=list[VoitureRead])
 async def index():
     return [vers_read(v) for v in get_service().lister()]
-
-
-@router.get("/{car_id}", response_model=VoitureRead)
-async def show(car_id: int):
-    voiture = get_service().chercher(car_id)
-    if voiture is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Véhicule introuvable")
-    return vers_read(voiture)
 
 
 @router.post("/", response_model=VoitureRead, status_code=status.HTTP_201_CREATED)
@@ -137,7 +143,63 @@ async def create(payload: VoitureCreate):
     return vers_read(voiture)
 
 
+@router.get("/{car_id}", response_model=VoitureRead)
+async def show(car_id: int):
+    voiture = get_service().chercher(car_id)
+    if voiture is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Véhicule introuvable")
+    return vers_read(voiture)
+
+
+# AJOUT IA : route PUT /{car_id} — modifier une voiture existante (nouveau)
+@router.put("/{car_id}", response_model=VoitureRead)
+async def update(car_id: int, payload: VoitureCreate):
+    service = get_service()
+
+    # AJOUT IA : vérifier que la voiture existe
+    if service.chercher(car_id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Véhicule introuvable",
+        )
+
+    # AJOUT IA : reconstruire la voiture avec les nouvelles données
+    try:
+        voiture = Voiture(
+            id=car_id,
+            **payload.model_dump(exclude={"moteur"}),
+            moteur=creer_moteur(payload.moteur),
+        )
+    except (ValidationError, TypeError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        )
+
+    # AJOUT IA : appeler modifier() — rowcount=0 n'est pas une erreur si la voiture existe
+    try:
+        service.modifier(voiture)
+    except (ValidationError, TypeError, ValueError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        )
+
+    return vers_read(voiture)
+
+
 @router.delete("/{car_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete(car_id: int):
     if not get_service().supprimer(car_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Véhicule introuvable")
+
+
+# AJOUT IA : route GET /{car_id}/motorisations — motorisation d'une voiture (nouveau)
+@router.get("/{car_id}/motorisations", response_model=MoteurRead)
+async def get_motorisation(car_id: int):
+    voiture = get_service().chercher(car_id)
+    if voiture is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Véhicule introuvable")
+    if voiture.moteur is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Aucune motorisation associée")
+    return moteur_vers_read(voiture.moteur)
