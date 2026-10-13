@@ -13,7 +13,10 @@ dependencies = [
     "sphinx (>=9.1.0,<10.0.0)",
     "mkdocs (>=1.6.1,<2.0.0)",
     "mkdocs-material (>=9.7.7,<10.0.0)",
-    "mkdocstrings (>=1.0.7,<2.0.0)"
+    "mkdocstrings (>=1.0.7,<2.0.0)",
+    "fastapi (>=0.143.0,<0.144.0)",
+    "uvicorn (>=0.54.0,<0.55.0)",
+    "python-dotenv (>=1.2.4,<2.0.0)"
 ]
 
 [tool.poetry]
@@ -22,3 +25,6 @@ package-mode = false
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

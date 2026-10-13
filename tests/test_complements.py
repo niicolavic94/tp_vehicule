@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
-from src.core.exceptions import ValidationError
-from src.models.motorisations.electrique import Electrique
-from src.models.motorisations.hybride import Hybride
-from src.models.motorisations.thermique import Thermique
-from src.models.vehicules.voiture import Voiture
-from src.utils.validators import (
+from parc_vehicule.core import ValidationError
+from parc_vehicule.models import Hybride
+from parc_vehicule.models.motorisations.electrique import Electrique
+from parc_vehicule.models.motorisations.thermique import Thermique
+from parc_vehicule.models.vehicules import Voiture
+from parc_vehicule.utils.validators import (
     valider_annee,
     valider_positif,
     valider_positif_ou_nul,
@@ -18,7 +18,7 @@ from src.utils.validators import (
 
 # ------------------------------------------------------- mysql_connection
 def test_get_connection_utilise_les_variables_denvironnement(monkeypatch):
-    from src.repositories import mysql_connection
+    from parc_vehicule.repositories import mysql_connection
 
     monkeypatch.setenv("DB_HOST", "db")
     monkeypatch.setenv("DB_PORT", "3307")
@@ -35,7 +35,7 @@ def test_get_connection_utilise_les_variables_denvironnement(monkeypatch):
 
 
 def test_get_connection_valeurs_par_defaut(monkeypatch):
-    from src.repositories import mysql_connection
+    from parc_vehicule.repositories import mysql_connection
 
     for var in ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"):
         monkeypatch.delenv(var, raising=False)
@@ -50,8 +50,8 @@ def test_get_connection_valeurs_par_defaut(monkeypatch):
 @pytest.mark.parametrize(
     "module, classe",
     [
-        ("src.repositories.abstractmotorrepository", "AbstractMotorRepository"),
-        ("src.repositories.abstractvehiculerepository", "AbstractVehicleRepository"),
+        ("parc_vehicule.repositories.abstractmotorrepository", "AbstractMotorRepository"),
+        ("parc_vehicule.repositories.abstractvehiculerepository", "AbstractVehicleRepository"),
     ],
 )
 def test_contrat_abstrait(module, classe):
@@ -209,7 +209,7 @@ def test_valider_annee():
 
 # ---------------------------------------------------------- memory_repository
 def test_memory_repository_conserve_un_id_existant():
-    from src.repositories.memory_repository import MemoryRepository
+    from parc_vehicule.repositories import MemoryRepository
 
     repo = MemoryRepository()
     v = Voiture("Renault", "Clio", 2020, id=10)

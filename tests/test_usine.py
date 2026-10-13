@@ -1,8 +1,8 @@
 """Tests de la fabrique de motorisations."""
 import pytest
 
-import src.services.usine as usine_module
-from src.services.usine import Usine
+import parc_vehicule.services.usine as usine_module
+from parc_vehicule.services.usine import Usine
 
 
 class Faux:

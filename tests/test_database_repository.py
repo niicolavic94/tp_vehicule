@@ -4,11 +4,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.models.motorisations.electrique import Electrique
-from src.models.motorisations.hybride import Hybride
-from src.models.motorisations.thermique import Thermique
-from src.models.vehicules.voiture import Voiture
-from src.repositories.databaserepository import (
+from parc_vehicule.models import Hybride
+from parc_vehicule.models.motorisations.electrique import Electrique
+from parc_vehicule.models.motorisations.thermique import Thermique
+from parc_vehicule.models.vehicules import Voiture
+from parc_vehicule.repositories import (
     DatabaseMotorRepository,
     DatabaseVehicleRepository,
 )

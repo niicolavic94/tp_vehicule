@@ -3,10 +3,10 @@
 
 import pytest
 
-from src.core.exceptions import ValidationError
-from src.models.motorisations.electrique import Electrique
-from src.models.motorisations.hybride import Hybride
-from src.models.motorisations.thermique import Thermique
+from parc_vehicule.core import ValidationError
+from parc_vehicule.models import Hybride
+from parc_vehicule.models.motorisations.electrique import Electrique
+from parc_vehicule.models.motorisations.thermique import Thermique
 
 
 @pytest.mark.parametrize(

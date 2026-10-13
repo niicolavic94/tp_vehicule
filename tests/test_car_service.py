@@ -1,12 +1,12 @@
 """Tests automatisés du module test_car_service."""
 # pylint: disable=redefined-outer-name
 import pytest
+from parc_vehicule.services.catalogue import Catalogue
 
-from src.core.exceptions import ValidationError
-from src.models.motorisations.thermique import Thermique
-from src.models.vehicules.voiture import Voiture
-from src.repositories.memory_repository import MemoryRepository
-from src.services.catalogue import Catalogue
+from parc_vehicule.core import ValidationError
+from parc_vehicule.models.motorisations.thermique import Thermique
+from parc_vehicule.models.vehicules import Voiture
+from parc_vehicule.repositories import MemoryRepository
 
 
 @pytest.fixture
@@ -22,10 +22,10 @@ def nouvelle_voiture(marque="Toyota", modele="Corolla"):
         marque=marque,
         modele=modele,
         annee=2022,
-        moteur=Thermique(
-            reservoir_l=50,
-            consommation_l_100km=5,
-        ),
+        moteur=Thermique(reservoir_l=50, consommation_l_100km=5),
+        kilometrage=0,
+        volume_coffre=300,
+        categorie="berline",
     )
 
 
@@ -50,6 +50,7 @@ def test_create_car_with_invalid_brand():
             marque="",
             modele="Corolla",
             annee=2022,
+            moteur=Thermique(reservoir_l=50, consommation_l_100km=5),
         )
 
 

@@ -1,9 +1,9 @@
 """Tests automatisés du module test_catalogue."""
 import pytest
 
-from src.core.exceptions import ValidationError
-from src.models.motorisations.thermique import Thermique
-from src.models.vehicules.voiture import Voiture
+from parc_vehicule.core import ValidationError
+from parc_vehicule.models.motorisations.thermique import Thermique
+from parc_vehicule.models.vehicules import Voiture
 
 
 def test_validation_voiture_marque_vide():
