@@ -144,41 +144,6 @@ async def delete(car_id: int):
     
 
 
-# AJOUT IA : modifier une voiture existante
-@router.put("/{car_id}", response_model=VoitureRead)
-async def update(car_id: int, payload: VoitureCreate):
-    service = get_service()
-
-    # AJOUT IA : vérifier que la voiture existe
-    voiture_existante = service.chercher(car_id)
-    if voiture_existante is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Véhicule introuvable",
-        )
-
-    # AJOUT IA : reconstruire la voiture avec les nouvelles données
-    try:
-        voiture = Voiture(
-            id=car_id,
-            **payload.model_dump(exclude={"moteur"}),
-            moteur=creer_moteur(payload.moteur),
-        )
-    except (ValidationError, TypeError) as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-        )
-
-    # AJOUT IA : à relier à la méthode de modification
-    # réellement disponible dans Catalogue / DatabaseVehicleRepository.
-    # Exemple : service.modifier(car_id, voiture)
-    raise NotImplementedError(
-        "La méthode de modification du repository reste à implémenter."
-    )
-
-
-
 # AJOUT IA : consulter la motorisation d'une voiture
 @router.get("/{car_id}/motorisations")
 async def get_car_motorisation(car_id: int):

@@ -1,4 +1,3 @@
-
 """Définit l'interface des motorisations de véhicules."""
 
 from abc import ABC, abstractmethod
@@ -6,6 +5,10 @@ from abc import ABC, abstractmethod
 
 class Motorisation(ABC):
     """Interface abstraite d'une motorisation de véhicule."""
+
+    def __init__(self):
+        self.id = None
+        self.power = None
 
     @property
     @abstractmethod
