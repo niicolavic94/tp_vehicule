@@ -160,3 +160,19 @@ class DatabaseVehicleRepository(Repository[Voiture]):
             raise
         finally:
             cursor.close()
+
+    
+   
+    def get_by_motor_id(self, motor_id: int) -> list[Voiture]:
+        cols = self._columns()
+        cursor = self._conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT * FROM vehicles WHERE motor_id = %s",
+                (motor_id,)
+            )
+            rows = cursor.fetchall()
+            return self._from_rows(rows, cols)
+        finally:
+            cursor.close()
+

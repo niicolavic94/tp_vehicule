@@ -8,7 +8,10 @@ from parc_vehicule.models.motorisations.electrique import Electrique
 from parc_vehicule.models.motorisations.hybride import Hybride
 from parc_vehicule.models.motorisations.thermique import Thermique
 from parc_vehicule.repositories.database_motor_repository import DatabaseMotorRepository
+from parc_vehicule.repositories.database_vehicle_repository import DatabaseVehicleRepository  # MODIF 1 : import ajouté pour accéder aux voitures par motor_id
 from parc_vehicule.repositories.mysql_connection import get_connection
+from parc_vehicule.routers.cars import VoitureRead  # MODIF 2 : import du schéma de réponse VoitureRead depuis cars.py
+from parc_vehicule.routers.cars import vers_read as vers_voiture_read  # MODIF 2 : import de la fonction de conversion, aliasée pour éviter le conflit avec vers_read local
 
 # AJOUT IA : fichier complet — toutes les routes /motorisations sont nouvelles
 
@@ -125,3 +128,24 @@ async def update(
 async def delete(motorisation_id: int):
     if not get_repo().delete(motorisation_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Motorisation introuvable")
+
+
+#BOOOOOOOOOOOOOOOOOONUS : route pour récupérer toutes les voitures d'une motorisation
+
+
+
+@router.get("/{motorisation_id}/cars", response_model=list[VoitureRead])
+async def get_cars(motorisation_id: int):
+    moteur = get_repo().get_by_id(motorisation_id)
+
+    if moteur is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Motorisation introuvable"
+        )
+
+    voitures = DatabaseVehicleRepository(get_connection()).get_by_motor_id(  # MODIF 3 : `connection` indéfini remplacé par get_connection()
+        motorisation_id
+    )
+
+    return [vers_voiture_read(v) for v in voitures]
