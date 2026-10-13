@@ -1,9 +1,9 @@
+from parc_vehicule.core.interfaces import Repository
 from parc_vehicule.models.vehicules.voiture import Voiture
-from parc_vehicule.repositories.abstractvehiculerepository import AbstractVehicleRepository
 from parc_vehicule.repositories.database_motor_repository import DatabaseMotorRepository
 
 
-class DatabaseVehicleRepository(AbstractVehicleRepository):
+class DatabaseVehicleRepository(Repository[Voiture]):
 
     def __init__(self, connection):
         self._conn = connection

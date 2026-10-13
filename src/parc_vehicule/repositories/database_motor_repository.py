@@ -1,10 +1,10 @@
+from parc_vehicule.core.interfaces import Motorisation, Repository
 from parc_vehicule.models.motorisations.electrique import Electrique
 from parc_vehicule.models.motorisations.hybride import Hybride
 from parc_vehicule.models.motorisations.thermique import Thermique
-from parc_vehicule.repositories.abstractmotorrepository import AbstractMotorRepository
 
 
-class DatabaseMotorRepository(AbstractMotorRepository):
+class DatabaseMotorRepository(Repository[Motorisation]):
 
     def __init__(self, connection):
         self._conn = connection

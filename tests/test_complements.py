@@ -1,5 +1,4 @@
 """Tests complémentaires : connexion, contrats abstraits, modèles, validateurs."""
-import importlib
 from unittest.mock import patch
 
 import pytest
@@ -47,19 +46,12 @@ def test_get_connection_valeurs_par_defaut(monkeypatch):
 
 
 # --------------------------------------------------------- contrats abstraits
-@pytest.mark.parametrize(
-    "module, classe",
-    [
-        ("parc_vehicule.repositories.abstractmotorrepository", "AbstractMotorRepository"),
-        ("parc_vehicule.repositories.abstractvehiculerepository", "AbstractVehicleRepository"),
-    ],
-)
-def test_contrat_abstrait(module, classe):
-    cls = getattr(importlib.import_module(module), classe)
+def test_contrat_abstrait():
+    from parc_vehicule.core.interfaces.repository import Repository
+    cls = Repository
     with pytest.raises(TypeError):
         cls()  # non instanciable
 
-    # Une sous-classe concrète peut appeler les corps `...` sans erreur.
     methodes = ("add", "get_by_id", "read_all", "update", "delete")
     Concrete = type("Concrete", (cls,), {
         m: (lambda self, *a, _m=m: getattr(cls, _m)(self, *a)) for m in methodes
