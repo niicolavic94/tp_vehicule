@@ -1,8 +1,8 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import URL, create_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 load_dotenv()
 
@@ -13,12 +13,21 @@ host     = os.getenv("DB_HOST",     "localhost")
 port     = int(os.getenv("DB_PORT", "3306"))
 database = os.getenv("DB_NAME",     "projet_dev_avance")
 
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
+SQLALCHEMY_DATABASE_URL = URL.create(
+    "mysql+pymysql",
+    username=user,
+    password=password,
+    host=host,
+    port=port,
+    database=database,
+)
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 def get_db():

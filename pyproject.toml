@@ -6,9 +6,8 @@ authors = [
     {name = "niicolavic94", email = "nicoredon94@gmail.com"}
 ]
 readme = "README.md"
-requires-python = "^3.14"
+requires-python = ">=3.14,<4.0"
 dependencies = [
-    "mysql-connector-python (>=26.7.0,<27.0.0)",
     "pydocstyle (>=6.3.0,<7.0.0)",
     "sphinx (>=9.1.0,<10.0.0)",
     "mkdocs (>=1.6.1,<2.0.0)",
@@ -24,6 +23,9 @@ dependencies = [
 
 [tool.poetry]
 package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=9.1.0,<10.0.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

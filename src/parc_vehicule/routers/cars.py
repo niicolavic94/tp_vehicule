@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from parc_vehicule.core.exceptions import ValidationError
@@ -9,16 +9,14 @@ from parc_vehicule.models.motorisations.electrique import Electrique
 from parc_vehicule.models.motorisations.hybride import Hybride
 from parc_vehicule.models.motorisations.thermique import Thermique
 from parc_vehicule.models.vehicules.voiture import Voiture
-from parc_vehicule.repositories.mysql_connection import get_connection
-from parc_vehicule.repositories.database_vehicle_repository import DatabaseVehicleRepository
+from parc_vehicule.database.database import get_db
 from parc_vehicule.services.catalogue import Catalogue
 
 router = APIRouter(prefix="/cars", tags=["cars"])
 
 
-def get_service() -> Catalogue:
-    conn = get_connection()
-    return Catalogue(vehicle_repository=DatabaseVehicleRepository(conn))
+def get_service(session=Depends(get_db)) -> Catalogue:
+    return Catalogue(session)
 
 
 # ---------- Schémas moteur ----------
@@ -53,7 +51,7 @@ MoteurCreate = Annotated[
 # ---------- Schémas voiture ----------
 
 class VoitureCreate(BaseModel):
-    """Corps du POST : pas d'id, il est attribué par le repository."""
+    """Corps des requêtes d'écriture ; l'identifiant est attribué par la base."""
 
     marque: str
     modele: str
@@ -111,20 +109,20 @@ def vers_read(voiture: Voiture) -> VoitureRead:
 # ---------- Routes ----------
 
 @router.get("/", response_model=list[VoitureRead])
-async def index():
-    return [vers_read(v) for v in get_service().lister()]
+async def index(service: Catalogue = Depends(get_service)):
+    return [vers_read(v) for v in service.lister()]
 
 
 @router.get("/{car_id}", response_model=VoitureRead)
-async def show(car_id: int):
-    voiture = get_service().chercher(car_id)
+async def show(car_id: int, service: Catalogue = Depends(get_service)):
+    voiture = service.chercher(car_id)
     if voiture is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Véhicule introuvable")
     return vers_read(voiture)
 
 
 @router.post("/", response_model=VoitureRead, status_code=status.HTTP_201_CREATED)
-async def create(payload: VoitureCreate):
+async def create(payload: VoitureCreate, service: Catalogue = Depends(get_service)):
     try:
         voiture = Voiture(
             **payload.model_dump(exclude={"moteur"}),
@@ -133,21 +131,22 @@ async def create(payload: VoitureCreate):
     except (ValidationError, TypeError) as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
 
-    get_service().ajouter(voiture)
+    service.ajouter(voiture)
     return vers_read(voiture)
 
 
 @router.delete("/{car_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete(car_id: int):
-    if not get_service().supprimer(car_id):
+async def delete(car_id: int, service: Catalogue = Depends(get_service)):
+    if not service.supprimer(car_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Véhicule introuvable")
     
 
 
-# AJOUT IA : consulter la motorisation d'une voiture
 @router.get("/{car_id}/motorisations")
-async def get_car_motorisation(car_id: int):
-    voiture = get_service().chercher(car_id)
+async def get_car_motorisation(
+    car_id: int, service: Catalogue = Depends(get_service)
+):
+    voiture = service.chercher(car_id)
 
     if voiture is None:
         raise HTTPException(
@@ -155,7 +154,6 @@ async def get_car_motorisation(car_id: int):
             detail="Véhicule introuvable",
         )
 
-    # AJOUT IA : retourner les informations propres au moteur
     moteur = voiture.moteur
 
     if isinstance(moteur, Electrique):
@@ -184,19 +182,18 @@ async def get_car_motorisation(car_id: int):
             "autonomie_km": moteur.autonomie(),
         }
 
-    # AJOUT IA : gestion d'un type de moteur non reconnu
     raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail="Type de motorisation non reconnu",
     )
 
 
-# AJOUT IA : route PUT pour modifier une voiture existante
 @router.put("/{car_id}", response_model=VoitureRead)
-async def update(car_id: int, payload: VoitureCreate):
-    service = get_service()
-
-    # AJOUT IA : vérifier que la voiture existe
+async def update(
+    car_id: int,
+    payload: VoitureCreate,
+    service: Catalogue = Depends(get_service),
+):
     voiture_existante = service.chercher(car_id)
 
     if voiture_existante is None:
@@ -205,11 +202,11 @@ async def update(car_id: int, payload: VoitureCreate):
             detail="Véhicule introuvable",
         )
 
-    # AJOUT IA : construire la voiture avec les données reçues
     try:
+        moteur = creer_moteur(payload.moteur)
         voiture = Voiture(
             **payload.model_dump(exclude={"moteur"}),
-            moteur=creer_moteur(payload.moteur),
+            moteur=moteur,
             id=car_id,
         )
     except (ValidationError, TypeError) as e:
@@ -218,22 +215,7 @@ async def update(car_id: int, payload: VoitureCreate):
             detail=str(e),
         )
 
-    # AJOUT IA : appeler la méthode modifier déjà présente dans Catalogue
-    try:
-        modifie = service.modifier(voiture)
-    except (ValidationError, TypeError, ValueError) as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-        )
+    if not service.modifier(voiture):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Véhicule introuvable")
 
-    # AJOUT IA : gérer le cas où aucune ligne n'a été modifiée
-    if not modifie:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Véhicule introuvable ou non modifié",
-        )
-
-    # AJOUT IA : renvoyer la voiture au format de lecture
     return vers_read(voiture)
-

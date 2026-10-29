@@ -11,9 +11,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Ajoute src/ au path pour importer parc_vehicule
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from parc_vehicule.database.database import Base, engine  # noqa: E402
+from parc_vehicule.database import models  # noqa: E402,F401
 
 config = context.config
 

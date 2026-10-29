@@ -1,1 +1,12 @@
-mysql-connector-python>=8.0
+pydocstyle>=6.3.0,<7.0.0
+sphinx>=9.1.0,<10.0.0
+mkdocs>=1.6.1,<2.0.0
+mkdocs-material>=9.7.7,<10.0.0
+mkdocstrings>=1.0.7,<2.0.0
+fastapi>=0.143.0,<0.144.0
+uvicorn>=0.54.0,<0.55.0
+python-dotenv>=1.2.4,<2.0.0
+sqlalchemy>=2.1.4,<3.0.0
+pymysql>=1.2.3,<2.0.0
+alembic>=1.20.0,<2.0.0
+pytest>=9.1.0,<10.0.0

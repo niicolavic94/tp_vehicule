@@ -1,5 +1,5 @@
 """Tests complémentaires : connexion, contrats abstraits, modèles, validateurs."""
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,53 +15,17 @@ from parc_vehicule.utils.validators import (
 )
 
 
-# ------------------------------------------------------- mysql_connection
-def test_get_connection_utilise_les_variables_denvironnement(monkeypatch):
-    from parc_vehicule.repositories import mysql_connection
+# ------------------------------------------------------- database session
+def test_database_dependency_ferme_la_session(monkeypatch):
+    from parc_vehicule.database import database
 
-    monkeypatch.setenv("DB_HOST", "db")
-    monkeypatch.setenv("DB_PORT", "3307")
-    monkeypatch.setenv("DB_NAME", "base")
-    monkeypatch.setenv("DB_USER", "u")
-    monkeypatch.setenv("DB_PASSWORD", "p")
-    with patch.object(mysql_connection.mysql.connector, "connect") as connect:
-        res = mysql_connection.get_connection()
-    connect.assert_called_once_with(
-        host="db", port=3307, database="base", user="u", password="p",
-        autocommit=False, use_pure=True,
-    )
-    assert res is connect.return_value
-
-
-def test_get_connection_valeurs_par_defaut(monkeypatch):
-    from parc_vehicule.repositories import mysql_connection
-
-    for var in ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"):
-        monkeypatch.delenv(var, raising=False)
-    with patch.object(mysql_connection.mysql.connector, "connect") as connect:
-        mysql_connection.get_connection()
-    kwargs = connect.call_args.kwargs
-    assert kwargs["host"] == "localhost"
-    assert kwargs["port"] == 3306
-
-
-# --------------------------------------------------------- contrats abstraits
-def test_contrat_abstrait():
-    from parc_vehicule.core.interfaces.repository import Repository
-    cls = Repository
-    with pytest.raises(TypeError):
-        cls()  # non instanciable
-
-    methodes = ("add", "get_by_id", "read_all", "update", "delete")
-    Concrete = type("Concrete", (cls,), {
-        m: (lambda self, *a, _m=m: getattr(cls, _m)(self, *a)) for m in methodes
-    })
-    obj = Concrete()
-    assert obj.add(None) is None
-    assert obj.get_by_id(1) is None
-    assert obj.read_all() is None
-    assert obj.update(None) is None
-    assert obj.delete(1) is None
+    connection = MagicMock()
+    monkeypatch.setattr(database, "SessionLocal", lambda: connection)
+    database_dependency = database.get_db()
+    assert next(database_dependency) is connection
+    with pytest.raises(StopIteration):
+        next(database_dependency)
+    connection.close.assert_called_once_with()
 
 
 # ------------------------------------------------------------ motorisations
@@ -197,14 +161,3 @@ def test_valider_annee():
         valider_annee(1885)
     with pytest.raises(ValidationError):
         valider_annee("2020")
-
-
-# ---------------------------------------------------------- memory_repository
-def test_memory_repository_conserve_un_id_existant():
-    from parc_vehicule.repositories import MemoryRepository
-
-    repo = MemoryRepository()
-    v = Voiture("Renault", "Clio", 2020, id=10)
-    assert repo.add(v) == 10
-    nouveau = Voiture("Peugeot", "208", 2021)
-    assert repo.add(nouveau) == 11  # le compteur repart après l'id explicite

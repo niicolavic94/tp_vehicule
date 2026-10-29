@@ -6,9 +6,3 @@ class ValidationError(Exception):
     """Signale qu'une donnée fournie est invalide."""
 
     pass
-
-
-class RepositoryError(Exception):
-    """Signale une erreur liée au dépôt de données."""
-
-    pass

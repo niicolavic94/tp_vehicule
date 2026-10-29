@@ -49,6 +49,9 @@ CREATE TABLE vehicles (
     year INT NOT NULL,
 
     motor_id INT NOT NULL,
+    kilometrage DECIMAL(10,2) NOT NULL DEFAULT 0,
+    volume_coffre DECIMAL(10,2) NOT NULL DEFAULT 300,
+    categorie VARCHAR(30) NOT NULL DEFAULT 'berline',
 
     CONSTRAINT fk_vehicle_motor
         FOREIGN KEY (motor_id)
